@@ -1,12 +1,7 @@
-// AURORA — Ride the Light, a best-game-01 entry (Node 22, standard library only): the game
-// is this directory's game/ folder, plain static files a desktop browser loads offline
-// (game/index.html and its ES modules, no library and no network request), and the program
-// hands it in. It copies game/ and screenshots/ from beside this file to /output and writes
-// /output/dossier.json, the summary the judge reads, with the vendored make.fun library.
-//
-// Serve it locally with `node serve.ts`, then open http://localhost:8080.
-// Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
-//   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
+// Bellwether hand-in. Node's own libraries copy the static game and the four
+// screenshots into the grader output, then write dossier.json for the judge.
+// Play locally with `node serve.ts` and open the printed localhost URL.
+// MAKEFUN_OUTPUT_DIR replaces /output when you run this file on your own machine.
 
 import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
