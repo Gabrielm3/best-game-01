@@ -1,88 +1,59 @@
-// A tiny WebAudio synth: no sound files, just short oscillator notes. Every call is guarded,
-// so a browser with no audio (or a muted tab) never breaks the game. M toggles mute.
+let ctx = null;
+let muted = false;
+let nextNote = 0;
+const SONG = [294, 349, 440, 392, 349, 330, 294, 262];
 
-const COLLECT_BASE = 523.25; // C5; the pitch climbs a semitone per combo step.
-const LEVEL_NOTES = [523.25, 659.25, 783.99, 1046.5];
+function context() {
+  if (!ctx) ctx = new AudioContext();
+  if (ctx.state === 'suspended') ctx.resume();
+  return ctx;
+}
 
-export function createAudio() {
-  let context = null;
-  let muted = false;
+function tone(freq, when, dur, type, gain) {
+  if (muted || !ctx) return;
+  const osc = ctx.createOscillator();
+  const amp = ctx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  amp.gain.setValueAtTime(gain, when);
+  amp.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+  osc.connect(amp);
+  amp.connect(ctx.destination);
+  osc.start(when);
+  osc.stop(when + dur + 0.02);
+}
 
-  function ensure() {
-    if (context !== null) return context;
-    try {
-      const AudioContext = window.AudioContext ?? window.webkitAudioContext;
-      if (!AudioContext) return null;
-      context = new AudioContext();
-      return context;
-    } catch {
-      return null;
-    }
-  }
+export function unlockAudio() {
+  context();
+}
 
-  /** One short note: a sine that fades out over `seconds`. */
-  function note(frequency, seconds, gain, when = 0) {
-    if (muted) return;
-    const audio = ensure();
-    if (audio === null) return;
-    if (audio.state === 'suspended') audio.resume().catch(() => {});
-    const start = audio.currentTime + when;
-    const oscillator = audio.createOscillator();
-    const envelope = audio.createGain();
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(frequency, start);
-    envelope.gain.setValueAtTime(0.0001, start);
-    envelope.gain.exponentialRampToValueAtTime(gain, start + 0.012);
-    envelope.gain.exponentialRampToValueAtTime(0.0001, start + seconds);
-    oscillator.connect(envelope).connect(audio.destination);
-    oscillator.start(start);
-    oscillator.stop(start + seconds + 0.05);
-  }
+export function toggleMute() {
+  muted = !muted;
+  return muted;
+}
 
-  /** A low thud for a hit: a triangle that drops in pitch. */
-  function thud() {
-    if (muted) return;
-    const audio = ensure();
-    if (audio === null) return;
-    if (audio.state === 'suspended') audio.resume().catch(() => {});
-    const start = audio.currentTime;
-    const oscillator = audio.createOscillator();
-    const envelope = audio.createGain();
-    oscillator.type = 'triangle';
-    oscillator.frequency.setValueAtTime(220, start);
-    oscillator.frequency.exponentialRampToValueAtTime(55, start + 0.22);
-    envelope.gain.setValueAtTime(0.22, start);
-    envelope.gain.exponentialRampToValueAtTime(0.0001, start + 0.25);
-    oscillator.connect(envelope).connect(audio.destination);
-    oscillator.start(start);
-    oscillator.stop(start + 0.3);
-  }
+export function playBell() {
+  const audio = context();
+  const now = audio.currentTime;
+  tone(784, now, 0.35, 'sine', 0.08);
+  tone(1175, now, 0.45, 'triangle', 0.04);
+}
 
-  return {
-    collect(comboStep) {
-      const semitones = Math.min(comboStep, 8);
-      note(COLLECT_BASE * 2 ** (semitones / 12), 0.18, 0.12);
-    },
-    hit() {
-      thud();
-    },
-    level() {
-      LEVEL_NOTES.forEach((frequency, index) => note(frequency, 0.22, 0.1, index * 0.07));
-    },
-    nova() {
-      note(1046.5, 0.5, 0.1);
-      note(1568, 0.5, 0.08, 0.06);
-    },
-    shield() {
-      note(392, 0.25, 0.1);
-      note(523.25, 0.25, 0.08, 0.08);
-    },
-    toggleMute() {
-      muted = !muted;
-      return muted;
-    },
-    get muted() {
-      return muted;
-    },
-  };
+export function playSave() {
+  const audio = context();
+  tone(660, audio.currentTime, 0.12, 'sine', 0.05);
+}
+
+export function playLoss() {
+  const audio = context();
+  tone(140, audio.currentTime, 0.2, 'sawtooth', 0.03);
+}
+
+export function stepScore() {
+  if (muted || !ctx) return;
+  const now = ctx.currentTime;
+  if (now < nextNote) return;
+  const note = SONG[Math.floor(now / 0.45) % SONG.length];
+  tone(note, now, 0.3, 'sine', 0.02);
+  nextNote = now + 0.45;
 }

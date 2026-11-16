@@ -1,97 +1,84 @@
-// The screenshot scenes behind ?shot=start|play|combo|end. Each one plays the real rules
-// forward from a fresh world for a fixed number of steps, steered by a simple autopilot (chase
-// the nearest mote, keep clear of shards), so the frame is what a short game really looks like
-// and the same seed always gives the same frame.
-import { FIELD, STEP } from './config.js';
-import { EVENT_OVER } from './world.js';
-import { SCREEN_OVER, SCREEN_PLAY, SCREEN_TITLE } from './render.js';
+import { STEP } from './field.js';
+import { beginDrive, createRun, stepRun } from './run.js';
 
-const START_SECONDS = 5;
-const PLAY_SECONDS = 26;
-const COMBO_SECONDS = 16;
-const END_LIMIT_SECONDS = 600;
-
-/** How close a shard must be before the autopilot flees from it instead of chasing a mote. */
-const DANGER_PLAY = 160;
-const DANGER_COMBO = 95;
-
-/** Steer toward the nearest mote, fleeing a shard that is too close. */
-function autopilot(state, dangerRadius) {
-  const wisp = state.wisp;
-  let mote = null;
-  let moteDistance = Infinity;
-  for (const item of state.motes) {
-    if (!item.active) continue;
-    const distance = Math.hypot(item.x - wisp.x, item.y - wisp.y);
-    if (distance < moteDistance) {
-      moteDistance = distance;
-      mote = item;
-    }
-  }
-  let shard = null;
-  let shardDistance = Infinity;
-  for (const item of state.shards) {
-    if (!item.active) continue;
-    const distance = Math.hypot(item.x - wisp.x, item.y - wisp.y);
-    if (distance < shardDistance) {
-      shardDistance = distance;
-      shard = item;
-    }
-  }
-
+function centroid(run) {
   let x = 0;
   let y = 0;
-  if (mote !== null) {
-    x = mote.x - wisp.x;
-    y = mote.y - wisp.y;
-  } else {
-    // No mote in play: drift back to the middle of the field, where there is room to
-    // dodge in every direction, instead of hugging the top edge where shards spawn.
-    x = FIELD.width / 2 - wisp.x;
-    y = FIELD.height / 2 - wisp.y;
+  let n = 0;
+  for (const sheep of run.sheep) {
+    if (sheep.gone) continue;
+    x += sheep.x;
+    y += sheep.y;
+    n += 1;
   }
-  if (shard !== null && shardDistance < dangerRadius) {
-    const weight = 2.2 * (1 - shardDistance / dangerRadius);
-    x += ((wisp.x - shard.x) / Math.max(1, shardDistance)) * weight;
-    y += ((wisp.y - shard.y) / Math.max(1, shardDistance)) * weight;
-  }
-  const length = Math.hypot(x, y);
-  if (length < 0.001) return { x: 0, y: 0 };
-  return { x: x / length, y: y / length };
+  if (!n) return { x: run.fold.x, y: run.fold.y + run.fold.h / 2 };
+  return { x: x / n, y: y / n };
 }
 
-/** Run the world forward for `seconds`, steering with the autopilot, until it ends. */
-function runFor(world, seconds, dangerRadius) {
-  const steps = Math.floor(seconds / STEP);
-  for (let index = 0; index < steps; index += 1) {
-    const move = autopilot(world.state, dangerRadius);
-    if (world.step(STEP, move.x, move.y, false) & EVENT_OVER) break;
-  }
-}
-
-/**
- * Set `world` to the named scene (start, play, combo or end; any other name is start) and
- * return the screen to draw over it and the best score to show.
- */
-export function stageShot(name, world) {
-  world.reset();
-  if (name !== 'play' && name !== 'combo' && name !== 'end') {
-    for (let index = 0; index < START_SECONDS / STEP; index += 1) world.step(STEP, 0, 0, true);
-    return { screen: SCREEN_TITLE, best: 0 };
-  }
-  if (name === 'combo') {
-    runFor(world, COMBO_SECONDS, DANGER_COMBO);
-    const over = world.state.lives === 0;
-    return { screen: over ? SCREEN_OVER : SCREEN_PLAY, best: world.state.score };
-  }
-  if (name === 'end') {
-    for (let index = 0; index < END_LIMIT_SECONDS / STEP; index += 1) {
-      const move = autopilot(world.state, 0);
-      if (world.step(STEP, move.x, move.y, false) & EVENT_OVER) break;
+/** Lead the flock toward the fold with the same bell the player rings. */
+export function herdScript(run, seconds, stopAt = Infinity) {
+  let since = 0;
+  const steps = Math.round(seconds / STEP);
+  for (let i = 0; i < steps; i += 1) {
+    if (run.mode !== 'play' || run.saved >= stopAt) break;
+    const flock = centroid(run);
+    const mouthX = run.fold.x + run.fold.w * 0.45;
+    const mouthY = run.fold.y + run.fold.h / 2;
+    const dxm = mouthX - flock.x;
+    const dym = mouthY - flock.y;
+    const dm = Math.hypot(dxm, dym) || 1;
+    const lead = dm < 200 ? dm : 120;
+    const aimX = flock.x + (dxm / dm) * lead;
+    const aimY = flock.y + (dym / dm) * lead;
+    let sx = aimX - run.shepherd.x;
+    let sy = aimY - run.shepherd.y;
+    for (const wolf of run.wolves) {
+      if (wolf.delay > 0) continue;
+      for (const sheep of run.sheep) {
+        if (sheep.gone) continue;
+        if (Math.hypot(wolf.x - sheep.x, wolf.y - sheep.y) < 120) {
+          sx = wolf.x - run.shepherd.x;
+          sy = wolf.y - run.shepherd.y;
+        }
+      }
     }
-    return { screen: SCREEN_OVER, best: world.state.score };
+    const dist = Math.hypot(sx, sy) || 1;
+    const dx = sx;
+    const dy = sy;
+    since += STEP;
+    const ring = since > 0.48;
+    if (ring) since = 0;
+    stepRun(run, { x: dx / dist, y: dy / dist, ax: aimX, ay: aimY, ring }, STEP);
   }
-  runFor(world, PLAY_SECONDS, DANGER_PLAY);
-  const over = world.state.lives === 0;
-  return { screen: over ? SCREEN_OVER : SCREEN_PLAY, best: world.state.score };
+}
+
+export function stageShot(name, seed) {
+  const run = createRun(seed >>> 0);
+  run.best = 6;
+  if (name === 'title') return run;
+  if (name === 'storm') {
+    beginDrive(run, 2);
+    run.stars = 5;
+    herdScript(run, 18, 3);
+    run.bannerT = 0;
+    run.mode = 'play';
+    return run;
+  }
+  if (name === 'fold') {
+    beginDrive(run, 3);
+    run.saved = 10;
+    for (const sheep of run.sheep) sheep.gone = 'saved';
+    run.finishedSaved = 44;
+    run.finishedLost = 3;
+    run.bellsRung = 52;
+    run.stars = 9;
+    run.bannerT = 0;
+    run.mode = 'victory';
+    return run;
+  }
+  run.mode = 'play';
+  herdScript(run, 22, 5);
+  run.bannerT = 0;
+  run.mode = 'play';
+  return run;
 }

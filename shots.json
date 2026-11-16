@@ -1,1 +1,6 @@
-[{"name":"1-start.jpg","query":"?shot=start&seed=1"},{"name":"2-play.jpg","query":"?shot=play&seed=1"},{"name":"3-combo.jpg","query":"?shot=combo&seed=1"},{"name":"4-end.jpg","query":"?shot=end&seed=1"}]
+[
+  { "name": "1-drive.jpg", "query": "?shot=drive&seed=7" },
+  { "name": "2-title.jpg", "query": "?shot=title&seed=1" },
+  { "name": "3-storm.jpg", "query": "?shot=storm&seed=3" },
+  { "name": "4-fold.jpg", "query": "?shot=fold&seed=1" }
+]
