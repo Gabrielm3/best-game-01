@@ -56,6 +56,10 @@ export function stageShot(name, seed) {
       reaches: [
         { stars: 3, open: true },
         { stars: 2, open: true },
+        { stars: 2, open: true },
+        { stars: 0, open: false },
+        { stars: 0, open: false },
+        { stars: 0, open: false },
         { stars: 0, open: false },
         { stars: 0, open: false },
       ],
@@ -74,12 +78,12 @@ export function stageShot(name, seed) {
   if (name === 'ledger') {
     beginReach(run, 3);
     run.delivered = 5;
-    run.finishedDelivered = 24;
-    run.finishedLost = 2;
-    run.cuts = 11;
-    run.hooks = 16;
-    run.stars = 9;
-    run.best = 9;
+    run.finishedDelivered = 48;
+    run.finishedLost = 4;
+    run.cuts = 19;
+    run.hooks = 28;
+    run.stars = 18;
+    run.best = 18;
     run.mode = 'victory';
     return run;
   }

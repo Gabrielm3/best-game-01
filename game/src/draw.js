@@ -194,7 +194,7 @@ export function drawHud(ctx, run) {
   ctx.textAlign = 'center';
   ctx.font = '16px Georgia, serif';
   ctx.fillStyle = '#e7d3b0';
-  ctx.fillText(`reach ${run.reach + 1}/4   ·   crates ${run.crates}   ·   cut ${run.cuts}   ·   lost ${run.lost}`, 640, 64);
+  ctx.fillText(`day ${run.reach + 1}/${REACHES.length}   ·   crates ${run.crates}   ·   cut ${run.cuts}   ·   lost ${run.lost}`, 640, 64);
   const frac = Math.max(0, run.fog / run.level.fog);
   ctx.fillStyle = '#3a3128';
   round(ctx, 430, 18, 420, 16, 8);
@@ -224,30 +224,30 @@ function roadOf(run) {
 }
 
 export function drawTitle(ctx, run) {
-  card(ctx, 64, 590);
+  card(ctx, 28, 664);
   ctx.fillStyle = '#1c140f';
   ctx.textAlign = 'center';
-  ctx.font = '700 64px Georgia, serif';
-  ctx.fillText('CUTWATER', 640, 140);
-  ctx.font = '24px Georgia, serif';
-  ctx.fillText('Hook the cable. Cut the snag. Land the crates before the fog.', 640, 186);
+  ctx.font = '700 46px Georgia, serif';
+  ctx.fillText('CUTWATER', 640, 86);
+  ctx.font = '20px Georgia, serif';
+  ctx.fillText('Eight days. Later water stays shut until the wharf is made.', 640, 122);
   roadOf(run).forEach((row, index) => {
-    const y = 230 + index * 78;
+    const y = 142 + index * 64;
     ctx.fillStyle = row.open ? '#1f4d55' : '#c8bba6';
-    round(ctx, 280, y, 720, 64, 10);
+    round(ctx, 250, y, 780, 56, 8);
     ctx.fill();
     ctx.fillStyle = row.open ? '#f6edd8' : '#5c5148';
-    ctx.font = '700 28px Georgia, serif';
+    ctx.font = '700 24px Georgia, serif';
     ctx.textAlign = 'left';
-    ctx.fillText(REACHES[index].name, 308, y + 42);
+    ctx.fillText(`Day ${index + 1}  ${REACHES[index].name}`, 272, y + 36);
     ctx.textAlign = 'right';
     const mark = row.stars > 0 ? `${row.stars} stars` : row.open ? 'open' : 'LOCKED';
-    ctx.fillText(mark, 972, y + 42);
+    ctx.fillText(mark, 1004, y + 36);
   });
   ctx.textAlign = 'center';
   ctx.fillStyle = '#1c140f';
-  ctx.font = '20px Georgia, serif';
-  ctx.fillText('Click a post to hook. Space cuts a snag. WASD steers.', 640, 600);
+  ctx.font = '18px Georgia, serif';
+  ctx.fillText('Click a post to hook. Space cuts a snag. WASD steers.', 640, 668);
 }
 
 export function drawResults(ctx, run) {
@@ -264,10 +264,11 @@ export function drawResults(ctx, run) {
     `Lost overboard ${run.finishedLost}`,
     `Snags cut ${run.cuts}`,
     `Cables hooked ${run.hooks}`,
-    `Stars ${run.stars} of 12`,
+    `Days ${REACHES.length} of ${REACHES.length}`,
+    `Stars ${run.stars} of ${REACHES.length * 3}`,
     `Best ${run.best || 0}`,
   ];
-  lines.forEach((line, index) => ctx.fillText(line, 400, 220 + index * 46));
+  lines.forEach((line, index) => ctx.fillText(line, 400, 210 + index * 40));
   ctx.fillStyle = '#1f4d55';
   round(ctx, 390, 520, 500, 70, 12);
   ctx.fill();

@@ -1,21 +1,18 @@
-const KEY = 'cutwater-reaches';
+import { REACHES } from './reaches.js';
+
+const KEY = 'cutwater-days';
 
 function fresh() {
   return {
     best: 0,
-    reaches: [
-      { stars: 0, open: true },
-      { stars: 0, open: false },
-      { stars: 0, open: false },
-      { stars: 0, open: false },
-    ],
+    reaches: REACHES.map((_, index) => ({ stars: 0, open: index === 0 })),
   };
 }
 
 export function loadSave() {
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (raw && Array.isArray(raw.reaches) && raw.reaches.length === 4) return raw;
+    if (raw && Array.isArray(raw.reaches) && raw.reaches.length === REACHES.length) return raw;
   } catch {
     /* private mode */
   }
