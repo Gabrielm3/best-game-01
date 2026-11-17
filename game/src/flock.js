@@ -1,4 +1,5 @@
 import { FIELD_H, FIELD_W } from './field.js';
+import { pushHurdles } from './hurdles.js';
 
 export function createSheep(run) {
   const { spawn } = run.level;
@@ -112,6 +113,7 @@ export function stepSheep(run, dt) {
     one.y += one.vy * dt;
     one.fear = Math.max(0, one.fear - dt);
     pushRocks(one, rocks, 14);
+    pushHurdles(one, run.hurdles, 12);
     one.x = Math.max(28, Math.min(FIELD_W - 28, one.x));
     one.y = Math.max(96, Math.min(FIELD_H - 28, one.y));
     if (

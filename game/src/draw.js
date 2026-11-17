@@ -1,4 +1,6 @@
+import { DRIVES } from './drives.js';
 import { FIELD_H, FIELD_W } from './field.js';
+import { themeOf } from './themes.js';
 
 function round(ctx, x, y, w, h, r) {
   ctx.beginPath();
@@ -6,16 +8,18 @@ function round(ctx, x, y, w, h, r) {
 }
 
 function sky(ctx, level) {
+  const theme = themeOf(level);
   const g = ctx.createLinearGradient(0, 0, 0, FIELD_H);
-  g.addColorStop(0, level.skyTop);
-  g.addColorStop(0.55, level.skyBot);
-  g.addColorStop(1, level.grassDark);
+  g.addColorStop(0, theme.skyTop);
+  g.addColorStop(0.55, theme.skyBot);
+  g.addColorStop(1, theme.grassDark);
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, FIELD_W, FIELD_H);
 }
 
 function hills(ctx, level) {
-  ctx.fillStyle = level.hill;
+  const theme = themeOf(level);
+  ctx.fillStyle = theme.hill;
   ctx.beginPath();
   ctx.moveTo(0, 250);
   ctx.quadraticCurveTo(180, 150, 380, 230);
@@ -36,16 +40,17 @@ function hills(ctx, level) {
 }
 
 function ground(ctx, level) {
-  ctx.fillStyle = level.grass;
+  const theme = themeOf(level);
+  ctx.fillStyle = theme.grass;
   ctx.fillRect(0, 300, FIELD_W, FIELD_H);
-  ctx.fillStyle = level.grassDark;
+  ctx.fillStyle = theme.grassDark;
   for (let i = 0; i < 18; i += 1) {
     const x = 40 + ((i * 97) % 1200);
     const y = 340 + ((i * 53) % 340);
     ctx.fillRect(x, y, 3, 14);
     ctx.fillRect(x + 6, y + 4, 3, 11);
   }
-  ctx.fillStyle = level.path;
+  ctx.fillStyle = theme.path;
   ctx.beginPath();
   ctx.moveTo(level.spawn.x - 40, level.spawn.y + 80);
   ctx.quadraticCurveTo(620, level.spawn.y - 40, level.fold.x - 10, level.fold.y + level.fold.h / 2);
@@ -212,7 +217,7 @@ export function drawHud(ctx, run) {
   ctx.textAlign = 'center';
   ctx.font = '16px Georgia, serif';
   ctx.fillStyle = '#e7d3b0';
-  ctx.fillText(`lost ${run.lost}   ·   stars ${run.stars}`, FIELD_W / 2, 64);
+  ctx.fillText(`drive ${run.drive + 1}/4   ·   lost ${run.lost}   ·   hurdles ${run.hurdles.length}   ·   stars ${run.stars}`, FIELD_W / 2, 64);
   const frac = Math.max(0, run.dusk / run.level.dusk);
   ctx.fillStyle = '#3a3128';
   round(ctx, 430, 22, 420, 16, 8);
@@ -236,43 +241,65 @@ function card(ctx, y, h) {
   ctx.stroke();
 }
 
+function roadOf(run) {
+  if (run.record && run.record.drives) return run.record.drives;
+  return DRIVES.map((_, index) => ({ stars: 0, open: index === 0 }));
+}
+
 export function drawTitle(ctx, run) {
-  card(ctx, 120, 470);
+  card(ctx, 70, 580);
   ctx.fillStyle = '#1c140f';
   ctx.textAlign = 'center';
-  ctx.font = '700 92px Georgia, serif';
-  ctx.fillText('BELLWETHER', 640, 250);
-  ctx.font = '28px Georgia, serif';
-  ctx.fillText('Ring the flock home before dusk.', 640, 310);
-  ctx.fillStyle = '#8d2f2a';
-  round(ctx, 390, 360, 500, 78, 12);
-  ctx.fill();
-  ctx.fillStyle = '#f6edd8';
-  ctx.font = '700 36px Georgia, serif';
-  ctx.fillText('START THE DRIVE', 640, 410);
+  ctx.font = '700 64px Georgia, serif';
+  ctx.fillText('BELLWETHER', 640, 150);
+  ctx.font = '24px Georgia, serif';
+  ctx.fillText('Four drives. Later hills stay shut until the fold is full.', 640, 196);
+  const rows = roadOf(run);
+  rows.forEach((row, index) => {
+    const y = 250 + index * 72;
+    ctx.fillStyle = row.open ? '#8d2f2a' : '#c8bba6';
+    round(ctx, 300, y, 680, 58, 10);
+    ctx.fill();
+    ctx.fillStyle = row.open ? '#f6edd8' : '#5c5148';
+    ctx.font = '700 28px Georgia, serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(DRIVES[index].name, 324, y + 38);
+    ctx.textAlign = 'right';
+    const marks = row.stars > 0 ? `${row.stars} stars` : row.open ? 'open' : 'LOCKED';
+    ctx.fillText(marks, 956, y + 38);
+  });
+  ctx.textAlign = 'center';
   ctx.fillStyle = '#1c140f';
-  ctx.font = '22px Georgia, serif';
-  ctx.fillText('WASD moves. Click or Space rings. Stand on a wolf to turn it.', 640, 490);
-  ctx.fillText(`Esc pauses    ·    best ${bestOf(run)} stars`, 640, 530);
+  ctx.font = '20px Georgia, serif';
+  ctx.fillText('Click to walk the open hill. F drops a hurdle. Space rings the bell.', 640, 560);
+  ctx.fillText(`Best ${bestOf(run)} stars`, 640, 596);
 }
 
 export function drawResults(ctx, run) {
   const won = run.mode === 'victory';
-  card(ctx, 130, 460);
+  card(ctx, 80, 560);
   ctx.fillStyle = '#1c140f';
   ctx.textAlign = 'center';
-  ctx.font = '700 64px Georgia, serif';
-  ctx.fillText(won ? 'THE FOLD IS FULL' : 'DUSK TOOK THE HILL', 640, 250);
+  ctx.font = '700 52px Georgia, serif';
+  ctx.fillText(won ? 'THE FOLD IS FULL' : 'DUSK TOOK THE HILL', 640, 170);
   ctx.font = '28px Georgia, serif';
-  ctx.fillText(`Sheep home ${run.finishedSaved}    ·    lost ${run.finishedLost}    ·    bells ${run.bellsRung}`, 640, 320);
-  ctx.font = '700 36px Georgia, serif';
-  ctx.fillText(`${run.stars} STARS`, 640, 390);
+  ctx.textAlign = 'left';
+  const lines = [
+    `Sheep home ${run.finishedSaved}`,
+    `Lost ${run.finishedLost}`,
+    `Bells rung ${run.bellsRung}`,
+    `Hurdles set ${run.hurdlesUsed}`,
+    `Stars ${run.stars} of 12`,
+    `Best ${bestOf(run)}`,
+  ];
+  lines.forEach((line, index) => ctx.fillText(line, 420, 230 + index * 40));
   ctx.fillStyle = '#8d2f2a';
-  round(ctx, 390, 440, 500, 78, 12);
+  round(ctx, 390, 490, 500, 70, 12);
   ctx.fill();
   ctx.fillStyle = '#f6edd8';
-  ctx.font = '700 36px Georgia, serif';
-  ctx.fillText(won ? 'PLAY AGAIN' : 'TRY THE DRIVE AGAIN', 640, 490);
+  ctx.textAlign = 'center';
+  ctx.font = '700 32px Georgia, serif';
+  ctx.fillText(won ? 'WALK AGAIN' : 'TRY THE DRIVE AGAIN', 640, 536);
 }
 
 export function drawPause(ctx) {
@@ -305,6 +332,13 @@ export function drawWorld(ctx, run) {
     }
   }
   drawRocks(ctx, run.rocks);
+  for (const hurdle of run.hurdles) {
+    ctx.fillStyle = '#8d6240';
+    ctx.fillRect(hurdle.x - hurdle.w / 2, hurdle.y - hurdle.h / 2, hurdle.w, hurdle.h);
+    ctx.strokeStyle = '#3a3128';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(hurdle.x - hurdle.w / 2, hurdle.y - hurdle.h / 2, hurdle.w, hurdle.h);
+  }
   drawFold(ctx, run);
   drawBells(ctx, run);
   for (const sheep of run.sheep) {

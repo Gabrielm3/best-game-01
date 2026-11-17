@@ -55,7 +55,19 @@ export function herdScript(run, seconds, stopAt = Infinity) {
 export function stageShot(name, seed) {
   const run = createRun(seed >>> 0);
   run.best = 6;
-  if (name === 'title') return run;
+  if (name === 'title') {
+    run.best = 5;
+    run.record = {
+      best: 5,
+      drives: [
+        { stars: 3, open: true },
+        { stars: 2, open: true },
+        { stars: 0, open: false },
+        { stars: 0, open: false },
+      ],
+    };
+    return run;
+  }
   if (name === 'storm') {
     beginDrive(run, 2);
     run.stars = 5;
@@ -71,13 +83,20 @@ export function stageShot(name, seed) {
     run.finishedSaved = 44;
     run.finishedLost = 3;
     run.bellsRung = 52;
+    run.hurdlesUsed = 6;
     run.stars = 9;
+    run.best = 9;
     run.bannerT = 0;
     run.mode = 'victory';
     return run;
   }
   run.mode = 'play';
   herdScript(run, 22, 5);
+  run.hurdles = [
+    { x: 430, y: 175, w: 86, h: 18 },
+    { x: 780, y: 575, w: 86, h: 18 },
+  ];
+  run.hurdlesUsed = 2;
   run.bannerT = 0;
   run.mode = 'play';
   return run;

@@ -2,7 +2,9 @@ import { ringBell, stepBells } from './bells.js';
 import { DRIVES } from './drives.js';
 import { FIELD_H, FIELD_W, STEP } from './field.js';
 import { createSheep, stepSheep } from './flock.js';
+import { placeHurdle, stepHurdles } from './hurdles.js';
 import { makeRng } from './random.js';
+import { storeDrive } from './save.js';
 import { createWolves, stepWolves } from './wolves.js';
 
 export function bestStars() {
@@ -32,6 +34,9 @@ export function createRun(seed) {
     sheep: [],
     wolves: [],
     bells: [],
+    hurdles: [],
+    hurdleCool: 0,
+    hurdlesUsed: 0,
     puffs: [],
     rocks: [],
     fold: DRIVES[0].fold,
@@ -69,6 +74,8 @@ export function beginDrive(run, index) {
   run.sheep = createSheep(run);
   run.wolves = createWolves(run);
   run.bells = [];
+  run.hurdles = [];
+  run.hurdleCool = 0;
   run.puffs = [];
   run.saved = 0;
   run.lost = 0;
@@ -132,8 +139,10 @@ export function stepRun(run, input, dt) {
     }
   }
   if (input.ring) ringBell(run, input.ax, input.ay);
+  if (input.hurdle && placeHurdle(run)) run.hurdlesUsed += 1;
 
   stepBells(run, dt);
+  stepHurdles(run, dt);
   stepSheep(run, dt);
   stepWolves(run, dt);
   for (const drop of run.rain) {
@@ -151,6 +160,7 @@ export function stepRun(run, input, dt) {
     const left = run.dusk / run.level.dusk;
     const star = run.lost === 0 && left > 0.25 ? 3 : run.lost <= 2 ? 2 : 1;
     run.stars += star;
+    run.record = storeDrive(run.drive, star);
     run.banner = star === 3 ? 'Clean drive' : star === 2 ? 'The fold holds' : 'Home, barely';
     run.bannerT = 1.5;
   }

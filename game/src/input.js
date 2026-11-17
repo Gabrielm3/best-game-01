@@ -9,6 +9,7 @@ export function createInput(canvas) {
     start: false,
     pause: false,
     mute: false,
+    hurdle: false,
   };
 
   function place(event) {
@@ -26,6 +27,7 @@ export function createInput(canvas) {
     if (key === ' ') held.ring = true;
     if (key === 'escape' || key === 'p') held.pause = true;
     if (key === 'm') held.mute = true;
+    if (key === 'f') held.hurdle = true;
   });
   window.addEventListener('keyup', (event) => keys.delete(event.key.toLowerCase()));
   canvas.addEventListener('pointerdown', (event) => {
@@ -62,11 +64,13 @@ export function createInput(canvas) {
         start: held.start,
         pause: held.pause,
         mute: held.mute,
+        hurdle: held.hurdle,
       };
       held.ring = false;
       held.start = false;
       held.pause = false;
       held.mute = false;
+      held.hurdle = false;
       return snapshot;
     },
   };

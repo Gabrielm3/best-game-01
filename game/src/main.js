@@ -2,7 +2,8 @@ import { playBell, playLoss, playSave, stepScore, toggleMute, unlockAudio } from
 import { paint } from './draw.js';
 import { STEP } from './field.js';
 import { createInput } from './input.js';
-import { bestStars, createRun, restartRun, stepRun } from './run.js';
+import { createRun, restartRun, stepRun } from './run.js';
+import { loadSave } from './save.js';
 import { stageShot } from './shots.js';
 
 const canvas = document.querySelector('#game');
@@ -12,7 +13,10 @@ const params = new URLSearchParams(location.search);
 const shotName = params.get('shot');
 const seed = Number(params.get('seed')) || 1;
 const run = shotName ? stageShot(shotName, seed) : createRun(seed);
-run.best = bestStars() || run.best || 0;
+if (!shotName) {
+  run.record = loadSave();
+  run.best = run.record.best;
+}
 
 const input = createInput(canvas);
 
@@ -40,7 +44,8 @@ if (shotName) {
     } else if (snap.start && (run.mode === 'victory' || run.mode === 'defeat')) {
       unlockAudio();
       restartRun(run);
-      run.best = bestStars();
+      run.record = loadSave();
+      run.best = run.record.best;
     } else if (snap.pause && run.mode === 'play') run.mode = 'pause';
     else if (snap.pause && run.mode === 'pause') run.mode = 'play';
     let rang = false;
