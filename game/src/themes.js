@@ -1,11 +1,12 @@
-/** One palette per drive, so the hill changes and the HUD does not. */
+/** The reach paints from this, so a night lock cannot look like the mill. */
 export function themeOf(level) {
   return {
     skyTop: level.skyTop,
     skyBot: level.skyBot,
-    grass: level.grass,
-    grassDark: level.grassDark,
-    hill: level.hill,
-    path: level.path,
+    water: level.water,
+    waterDeep: level.waterDeep,
+    bank: level.bank,
+    far: level.far,
+    night: level.night,
   };
 }

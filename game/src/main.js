@@ -1,4 +1,4 @@
-import { playBell, playLoss, playSave, stepScore, toggleMute, unlockAudio } from './audio.js';
+import { playCut, playDeliver, playHook, playLoss, stepScore, toggleMute, unlockAudio } from './audio.js';
 import { paint } from './draw.js';
 import { STEP } from './field.js';
 import { createInput } from './input.js';
@@ -21,7 +21,7 @@ if (!shotName) {
 const input = createInput(canvas);
 
 function paintStatus() {
-  status.textContent = `Bellwether. ${run.level.name}. Home ${run.saved} of ${run.level.quota}. Lost ${run.lost}.`;
+  status.textContent = `Cutwater. ${run.level.name}. Wharf ${run.delivered} of ${run.level.quota}. Crates ${run.crates}.`;
 }
 
 if (shotName) {
@@ -36,7 +36,7 @@ if (shotName) {
   const loop = (now) => {
     acc += Math.min(0.05, (now - last) / 1000);
     last = now;
-    const snap = input.take(run.shepherd);
+    const snap = input.take();
     if (snap.mute) toggleMute();
     if (snap.start && run.mode === 'title') {
       unlockAudio();
@@ -48,14 +48,15 @@ if (shotName) {
       run.best = run.record.best;
     } else if (snap.pause && run.mode === 'play') run.mode = 'pause';
     else if (snap.pause && run.mode === 'pause') run.mode = 'play';
-    let rang = false;
+    let acted = false;
     while (acc >= STEP) {
-      stepRun(run, { ...snap, ring: snap.ring && !rang && run.mode === 'play' }, STEP);
-      if (snap.ring) rang = true;
+      stepRun(run, { ...snap, hook: snap.hook && !acted, cut: snap.cut && !acted }, STEP);
+      if (snap.hook || snap.cut) acted = true;
       acc -= STEP;
     }
-    if (run.justRang) playBell();
-    if (run.justSaved) playSave();
+    if (run.justHook) playHook();
+    if (run.justCut) playCut();
+    if (run.justDeliver) playDeliver();
     if (run.justLost) playLoss();
     if (run.mode === 'play') stepScore();
     paint(ctx, run);

@@ -1,6 +1,6 @@
 [
-  { "name": "1-drive.jpg", "query": "?shot=drive&seed=7" },
-  { "name": "2-title.jpg", "query": "?shot=title&seed=1" },
-  { "name": "3-storm.jpg", "query": "?shot=storm&seed=3" },
-  { "name": "4-fold.jpg", "query": "?shot=fold&seed=1" }
+  { "name": "1-reach.jpg", "query": "?shot=reach&seed=7" },
+  { "name": "2-map.jpg", "query": "?shot=map&seed=1" },
+  { "name": "3-sluice.jpg", "query": "?shot=sluice&seed=3" },
+  { "name": "4-ledger.jpg", "query": "?shot=ledger&seed=1" }
 ]

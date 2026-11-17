@@ -1,7 +1,7 @@
 let ctx = null;
 let muted = false;
 let nextNote = 0;
-const SONG = [294, 349, 440, 392, 349, 330, 294, 262];
+const SONG = [220, 247, 294, 330, 294, 262, 247, 220];
 
 function context() {
   if (!ctx) ctx = new AudioContext();
@@ -32,28 +32,33 @@ export function toggleMute() {
   return muted;
 }
 
-export function playBell() {
+export function playHook() {
   const audio = context();
-  const now = audio.currentTime;
-  tone(784, now, 0.35, 'sine', 0.08);
-  tone(1175, now, 0.45, 'triangle', 0.04);
+  tone(180, audio.currentTime, 0.12, 'triangle', 0.06);
 }
 
-export function playSave() {
+export function playCut() {
   const audio = context();
-  tone(660, audio.currentTime, 0.12, 'sine', 0.05);
+  const now = audio.currentTime;
+  tone(140, now, 0.08, 'square', 0.04);
+  tone(90, now + 0.04, 0.12, 'sawtooth', 0.03);
+}
+
+export function playDeliver() {
+  const audio = context();
+  tone(392, audio.currentTime, 0.16, 'sine', 0.06);
 }
 
 export function playLoss() {
   const audio = context();
-  tone(140, audio.currentTime, 0.2, 'sawtooth', 0.03);
+  tone(110, audio.currentTime, 0.28, 'triangle', 0.07);
 }
 
 export function stepScore() {
-  if (muted || !ctx) return;
-  const now = ctx.currentTime;
+  const audio = context();
+  const now = audio.currentTime;
   if (now < nextNote) return;
-  const note = SONG[Math.floor(now / 0.45) % SONG.length];
-  tone(note, now, 0.3, 'sine', 0.02);
+  const note = SONG[Math.floor(now) % SONG.length];
+  tone(note, now, 0.18, 'sine', 0.025);
   nextNote = now + 0.45;
 }

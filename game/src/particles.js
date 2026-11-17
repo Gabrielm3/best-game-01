@@ -1,22 +1,23 @@
-export function ripple(run, x, y) {
-  for (let i = 0; i < 8; i += 1) {
-    const angle = (i / 8) * Math.PI * 2;
-    run.puffs.push({
+export function splash(run, x, y) {
+  for (let i = 0; i < 7; i += 1) {
+    const angle = -Math.PI * 0.15 + (i / 6) * Math.PI * 1.3;
+    run.splashes.push({
       x,
       y,
-      vx: Math.cos(angle) * 70,
-      vy: Math.sin(angle) * 70,
+      vx: Math.cos(angle) * (40 + i * 8),
+      vy: -Math.abs(Math.sin(angle)) * 90,
       age: 0,
-      life: 0.55,
+      life: 0.45,
     });
   }
 }
 
-export function stepPuffs(run, dt) {
-  for (const puff of run.puffs) {
-    puff.age += dt;
-    puff.x += puff.vx * dt;
-    puff.y += puff.vy * dt;
+export function stepSplashes(run, dt) {
+  for (const drop of run.splashes) {
+    drop.age += dt;
+    drop.vy += 280 * dt;
+    drop.x += drop.vx * dt;
+    drop.y += drop.vy * dt;
   }
-  run.puffs = run.puffs.filter((puff) => puff.age < puff.life);
+  run.splashes = run.splashes.filter((drop) => drop.age < drop.life);
 }

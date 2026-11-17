@@ -1,4 +1,4 @@
-// Bellwether hand-in. Node's own libraries copy the static game and the four
+// Cutwater hand-in. Node's own libraries copy the static game and the four
 // screenshots into the grader output, then write dossier.json for the judge.
 // Play locally with `node serve.ts` and open the printed localhost URL.
 // MAKEFUN_OUTPUT_DIR replaces /output when you run this file on your own machine.
