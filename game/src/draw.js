@@ -82,40 +82,47 @@ function scenery(ctx, level) {
 
 function wharf(ctx, level) {
   const theme = themeOf(level);
-  ctx.fillStyle = theme.night ? '#c4a46a' : '#e7d7b0';
-  ctx.fillRect(500, 600, 280, 90);
+  ctx.fillStyle = theme.night ? '#c4a46a' : '#f3e6cf';
+  ctx.fillRect(BANK_L, 560, BANK_R - BANK_L, 160);
   ctx.strokeStyle = '#3a3128';
-  ctx.lineWidth = 4;
-  for (let x = 512; x < 770; x += 28) {
+  ctx.lineWidth = 6;
+  for (let x = BANK_L + 16; x < BANK_R; x += 36) {
     ctx.beginPath();
-    ctx.moveTo(x, 608);
-    ctx.lineTo(x, 682);
+    ctx.moveTo(x, 572);
+    ctx.lineTo(x, 700);
     ctx.stroke();
   }
-  ctx.fillStyle = theme.night ? '#f3e6cf' : '#1c140f';
-  ctx.font = '700 18px Georgia, serif';
+  ctx.fillStyle = '#1c140f';
+  ctx.font = '700 42px Georgia, serif';
   ctx.textAlign = 'center';
-  ctx.fillText('WHARF', 640, 652);
+  ctx.fillText('WHARF', 640, 650);
 }
 
 function drawPosts(ctx, run) {
   for (const post of run.level.bollards) {
-    ctx.fillStyle = '#5c4632';
-    ctx.fillRect(post.x - 7, post.y - 18, 14, 36);
+    ctx.fillStyle = '#3a3128';
+    ctx.fillRect(post.x - 12, post.y - 28, 24, 64);
     ctx.fillStyle = '#e2b84a';
     ctx.beginPath();
-    ctx.arc(post.x, post.y - 18, 8, 0, Math.PI * 2);
+    ctx.arc(post.x, post.y - 28, 18, 0, Math.PI * 2);
     ctx.fill();
+    ctx.strokeStyle = '#1c140f';
+    ctx.lineWidth = 4;
+    ctx.stroke();
   }
 }
 
 function drawCable(ctx, run) {
   if (!run.cable) return;
-  ctx.strokeStyle = run.snag ? '#c4503a' : '#e2b84a';
-  ctx.lineWidth = 7;
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = '#1c140f';
+  ctx.lineWidth = 46;
   ctx.beginPath();
   ctx.moveTo(run.boat.x, run.boat.y);
   ctx.lineTo(run.cable.x, run.cable.y);
+  ctx.stroke();
+  ctx.strokeStyle = '#e2b84a';
+  ctx.lineWidth = 30;
   ctx.stroke();
 }
 
@@ -126,17 +133,26 @@ function drawLogs(ctx, run) {
     ctx.translate(log.x, log.y);
     ctx.rotate(log.spin);
     ctx.fillStyle = '#6b4228';
-    ctx.fillRect(-22, -8, 44, 16);
+    ctx.fillRect(-46, -16, 92, 32);
     ctx.fillStyle = '#8d6240';
-    ctx.fillRect(-16, -4, 10, 8);
+    ctx.fillRect(-30, -8, 22, 16);
     ctx.restore();
   }
   if (run.snag) {
+    const x = run.snag.log.x;
+    const y = run.snag.log.y;
     ctx.strokeStyle = '#c4503a';
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 8;
     ctx.beginPath();
-    ctx.arc(run.snag.log.x, run.snag.log.y, 22, 0, Math.PI * 2);
+    ctx.arc(x, y, 48, 0, Math.PI * 2);
     ctx.stroke();
+    ctx.fillStyle = '#c4503a';
+    round(ctx, x - 80, y - 108, 160, 64, 10);
+    ctx.fill();
+    ctx.fillStyle = '#f6edd8';
+    ctx.font = '700 42px Georgia, serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('CUT', x, y - 64);
   }
 }
 
@@ -148,18 +164,23 @@ function drawBoat(ctx, run) {
   ctx.fill();
   ctx.fillStyle = '#5c3a22';
   ctx.beginPath();
-  ctx.moveTo(boat.x - 36, boat.y);
-  ctx.lineTo(boat.x - 22, boat.y + 20);
-  ctx.lineTo(boat.x + 22, boat.y + 20);
-  ctx.lineTo(boat.x + 36, boat.y);
+  ctx.moveTo(boat.x - 70, boat.y);
+  ctx.lineTo(boat.x - 46, boat.y + 36);
+  ctx.lineTo(boat.x + 46, boat.y + 36);
+  ctx.lineTo(boat.x + 70, boat.y);
   ctx.closePath();
   ctx.fill();
   ctx.fillStyle = '#8d6240';
-  ctx.fillRect(boat.x - 20, boat.y - 8, 40, 12);
+  ctx.fillRect(boat.x - 40, boat.y - 14, 80, 22);
   ctx.fillStyle = '#f4e6c4';
+  ctx.strokeStyle = '#1c140f';
+  ctx.lineWidth = 3;
   const shown = Math.min(crates, 4);
   for (let i = 0; i < shown; i += 1) {
-    ctx.fillRect(boat.x - 16 + (i % 2) * 16, boat.y - 18 - Math.floor(i / 2) * 12, 14, 10);
+    const bx = boat.x - 34 + (i % 2) * 34;
+    const by = boat.y - 36 - Math.floor(i / 2) * 24;
+    ctx.fillRect(bx, by, 28, 20);
+    ctx.strokeRect(bx, by, 28, 20);
   }
   ctx.fillStyle = '#1c140f';
   ctx.fillRect(boat.x - 2, boat.y - 34, 4, 26);
@@ -183,28 +204,26 @@ function drawSplashes(ctx, run) {
 }
 
 export function drawHud(ctx, run) {
-  ctx.fillStyle = 'rgba(20, 16, 14, 0.9)';
-  ctx.fillRect(0, 0, FIELD_W, 74);
+  ctx.fillStyle = '#14110f';
+  ctx.fillRect(0, 0, FIELD_W, 88);
   ctx.fillStyle = '#f3e6cf';
   ctx.textAlign = 'left';
-  ctx.font = '700 28px Georgia, serif';
-  ctx.fillText(run.level.name, 24, 46);
-  ctx.textAlign = 'right';
-  ctx.fillText(`WHARF ${run.delivered}/${run.level.quota}`, FIELD_W - 24, 46);
-  ctx.textAlign = 'center';
-  ctx.font = '16px Georgia, serif';
+  ctx.font = '700 34px Georgia, serif';
+  ctx.fillText(run.level.name, 24, 40);
+  ctx.font = '22px Georgia, serif';
   ctx.fillStyle = '#e7d3b0';
-  ctx.fillText(`day ${run.reach + 1}/${REACHES.length}   ·   crates ${run.crates}   ·   cut ${run.cuts}   ·   lost ${run.lost}`, 640, 64);
+  ctx.fillText(`day ${run.reach + 1} of ${REACHES.length}    crates ${run.crates}    cut ${run.cuts}    lost ${run.lost}`, 24, 72);
+  ctx.fillStyle = '#f3e6cf';
+  ctx.textAlign = 'right';
+  ctx.font = '700 48px Georgia, serif';
+  ctx.fillText(`${run.delivered}/${run.level.quota}`, FIELD_W - 24, 62);
   const frac = Math.max(0, run.fog / run.level.fog);
   ctx.fillStyle = '#3a3128';
-  round(ctx, 430, 18, 420, 16, 8);
+  round(ctx, 860, 18, 160, 18, 8);
   ctx.fill();
   ctx.fillStyle = frac > 0.3 ? '#7eb0c4' : '#c4503a';
-  round(ctx, 430, 18, 420 * frac, 16, 8);
+  round(ctx, 860, 18, 160 * frac, 18, 8);
   ctx.fill();
-  ctx.fillStyle = '#f3e6cf';
-  ctx.font = '700 13px Georgia, serif';
-  ctx.fillText('FOG', 640, 16);
 }
 
 function card(ctx, y, h) {
@@ -301,12 +320,6 @@ export function drawWorld(ctx, run) {
   if (mist > 0.02) {
     ctx.fillStyle = `rgba(232, 236, 240, ${Math.min(0.45, mist)})`;
     ctx.fillRect(BANK_L, 74, BANK_R - BANK_L, 80 + mist * 180);
-  }
-  if (run.snag) {
-    ctx.fillStyle = '#c4503a';
-    ctx.font = '700 22px Georgia, serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('CUT', run.snag.log.x, run.snag.log.y - 28);
   }
   if (run.level.rain) {
     ctx.strokeStyle = 'rgba(230, 236, 242, 0.45)';

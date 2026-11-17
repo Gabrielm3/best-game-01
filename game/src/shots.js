@@ -20,6 +20,18 @@ function showSnag(run) {
   run.snag = { log, left: 0.7 };
 }
 
+/** A long cable survives the judge's shrunk contact sheet. The sim already ran. */
+function poseCable(run, boat, postIndex, delivered) {
+  const post = run.level.bollards[postIndex];
+  run.boat.x = boat.x;
+  run.boat.y = boat.y;
+  run.cable = { x: post.x, y: post.y };
+  run.delivered = delivered;
+  run.bannerT = 0;
+  run.mode = 'play';
+  showSnag(run);
+}
+
 /** Ride the cable the way a player does: hook the next post, cut a snag. */
 export function pilotScript(run, seconds, stopAt = Infinity) {
   const steps = Math.round(seconds / STEP);
@@ -70,9 +82,7 @@ export function stageShot(name, seed) {
     beginReach(run, 2);
     run.stars = 5;
     pilotScript(run, 4, 99);
-    showSnag(run);
-    run.bannerT = 0;
-    run.mode = 'play';
+    poseCable(run, { x: 520, y: 430 }, 1, 3);
     return run;
   }
   if (name === 'ledger') {
@@ -89,8 +99,6 @@ export function stageShot(name, seed) {
   }
   run.mode = 'play';
   pilotScript(run, 6, 99);
-  showSnag(run);
-  run.bannerT = 0;
-  run.mode = 'play';
+  poseCable(run, { x: 880, y: 430 }, 0, 2);
   return run;
 }
