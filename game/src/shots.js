@@ -11,6 +11,15 @@ function nextPost(run) {
   return best;
 }
 
+function showSnag(run) {
+  if (!run.cable) return;
+  const log = run.logs.find((one) => !one.gone);
+  if (!log) return;
+  log.x = (run.boat.x + run.cable.x) / 2;
+  log.y = (run.boat.y + run.cable.y) / 2;
+  run.snag = { log, left: 0.7 };
+}
+
 /** Ride the cable the way a player does: hook the next post, cut a snag. */
 export function pilotScript(run, seconds, stopAt = Infinity) {
   const steps = Math.round(seconds / STEP);
@@ -57,6 +66,7 @@ export function stageShot(name, seed) {
     beginReach(run, 2);
     run.stars = 5;
     pilotScript(run, 4, 99);
+    showSnag(run);
     run.bannerT = 0;
     run.mode = 'play';
     return run;
@@ -75,6 +85,7 @@ export function stageShot(name, seed) {
   }
   run.mode = 'play';
   pilotScript(run, 6, 99);
+  showSnag(run);
   run.bannerT = 0;
   run.mode = 'play';
   return run;

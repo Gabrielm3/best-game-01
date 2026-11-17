@@ -35,6 +35,51 @@ function banks(ctx, level) {
   }
 }
 
+function scenery(ctx, level) {
+  const theme = themeOf(level);
+  ctx.strokeStyle = theme.night ? '#1e3a28' : '#2f6a32';
+  ctx.lineWidth = 3;
+  for (let i = 0; i < 14; i += 1) {
+    const y = 90 + i * 42;
+    ctx.beginPath();
+    ctx.moveTo(BANK_L + 8, y);
+    ctx.quadraticCurveTo(BANK_L + 24, y - 16, BANK_L + 18, y - 28);
+    ctx.moveTo(BANK_R - 8, y + 12);
+    ctx.quadraticCurveTo(BANK_R - 26, y - 6, BANK_R - 16, y - 22);
+    ctx.stroke();
+  }
+  if (!level.rain && !level.night) {
+    ctx.fillStyle = '#8d6240';
+    ctx.beginPath();
+    ctx.arc(120, 280, 46, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#3a3128';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(80, 280);
+    ctx.lineTo(160, 280);
+    ctx.moveTo(120, 240);
+    ctx.lineTo(120, 320);
+    ctx.stroke();
+  }
+  if (level.rain) {
+    ctx.fillStyle = '#4a463f';
+    ctx.fillRect(BANK_L - 18, 300, 36, 80);
+    ctx.fillRect(BANK_R - 18, 300, 36, 80);
+    ctx.fillStyle = '#6a6458';
+    ctx.fillRect(BANK_L - 8, 250, 16, 50);
+    ctx.fillRect(BANK_R - 8, 250, 16, 50);
+  }
+  if (level.night) {
+    ctx.fillStyle = '#c4a46a';
+    ctx.fillRect(70, 160, 28, 70);
+    ctx.fillStyle = 'rgba(226, 184, 74, 0.35)';
+    ctx.beginPath();
+    ctx.arc(84, 150, 36, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
 function wharf(ctx, level) {
   const theme = themeOf(level);
   ctx.fillStyle = theme.night ? '#c4a46a' : '#e7d7b0';
@@ -67,7 +112,7 @@ function drawPosts(ctx, run) {
 function drawCable(ctx, run) {
   if (!run.cable) return;
   ctx.strokeStyle = run.snag ? '#c4503a' : '#e2b84a';
-  ctx.lineWidth = 4;
+  ctx.lineWidth = 7;
   ctx.beginPath();
   ctx.moveTo(run.boat.x, run.boat.y);
   ctx.lineTo(run.cable.x, run.cable.y);
@@ -96,22 +141,39 @@ function drawLogs(ctx, run) {
 }
 
 function drawBoat(ctx, run) {
-  const { boat, crates } = run;
-  ctx.fillStyle = '#6b4228';
+  const { boat, crates, level } = run;
+  ctx.fillStyle = 'rgba(232, 244, 246, 0.35)';
   ctx.beginPath();
-  ctx.moveTo(boat.x - 28, boat.y);
-  ctx.lineTo(boat.x - 18, boat.y + 16);
-  ctx.lineTo(boat.x + 18, boat.y + 16);
-  ctx.lineTo(boat.x + 28, boat.y);
+  ctx.ellipse(boat.x, boat.y + 18, 34, 10, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#5c3a22';
+  ctx.beginPath();
+  ctx.moveTo(boat.x - 36, boat.y);
+  ctx.lineTo(boat.x - 22, boat.y + 20);
+  ctx.lineTo(boat.x + 22, boat.y + 20);
+  ctx.lineTo(boat.x + 36, boat.y);
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = '#c4503a';
-  ctx.fillRect(boat.x - 4, boat.y - 22, 3, 22);
+  ctx.fillStyle = '#8d6240';
+  ctx.fillRect(boat.x - 20, boat.y - 8, 40, 12);
   ctx.fillStyle = '#f4e6c4';
-  let shown = 0;
-  for (let i = 0; i < Math.min(crates, 6); i += 1) {
-    ctx.fillRect(boat.x - 16 + shown * 6, boat.y - 6, 5, 5);
-    shown += 1;
+  const shown = Math.min(crates, 4);
+  for (let i = 0; i < shown; i += 1) {
+    ctx.fillRect(boat.x - 16 + (i % 2) * 16, boat.y - 18 - Math.floor(i / 2) * 12, 14, 10);
+  }
+  ctx.fillStyle = '#1c140f';
+  ctx.fillRect(boat.x - 2, boat.y - 34, 4, 26);
+  ctx.fillStyle = level.night ? '#e2b84a' : '#c4503a';
+  ctx.beginPath();
+  ctx.moveTo(boat.x + 2, boat.y - 32);
+  ctx.lineTo(boat.x + 18, boat.y - 22);
+  ctx.lineTo(boat.x + 2, boat.y - 16);
+  ctx.fill();
+  if (level.night) {
+    ctx.fillStyle = 'rgba(226, 184, 74, 0.28)';
+    ctx.beginPath();
+    ctx.arc(boat.x, boat.y, 70, 0, Math.PI * 2);
+    ctx.fill();
   }
 }
 
@@ -227,12 +289,24 @@ export function drawPause(ctx) {
 export function drawWorld(ctx, run) {
   sky(ctx, run.level);
   banks(ctx, run.level);
+  scenery(ctx, run.level);
   wharf(ctx, run.level);
   drawPosts(ctx, run);
   drawCable(ctx, run);
   drawLogs(ctx, run);
   drawBoat(ctx, run);
   drawSplashes(ctx, run);
+  const mist = 1 - Math.max(0, run.fog / run.level.fog);
+  if (mist > 0.02) {
+    ctx.fillStyle = `rgba(232, 236, 240, ${Math.min(0.45, mist)})`;
+    ctx.fillRect(BANK_L, 74, BANK_R - BANK_L, 80 + mist * 180);
+  }
+  if (run.snag) {
+    ctx.fillStyle = '#c4503a';
+    ctx.font = '700 22px Georgia, serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('CUT', run.snag.log.x, run.snag.log.y - 28);
+  }
   if (run.level.rain) {
     ctx.strokeStyle = 'rgba(230, 236, 242, 0.45)';
     ctx.lineWidth = 2;
